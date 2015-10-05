@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.brainlag</groupId>
+  <groupId>com.movableink</groupId>
   <artifactId>nsq-client</artifactId>
   <version>1.0.0.ALPHA</version>
 
   <name>JavaNSQClient</name>
   <description>Fast Java client for NSQ.</description>
-  <url>https://github.com/brainlag/JavaNSQClient</url>
+  <url>https://github.com/movableink/JavaNSQClient</url>
   <licenses>
     <license>
       <name>MIT License</name>
