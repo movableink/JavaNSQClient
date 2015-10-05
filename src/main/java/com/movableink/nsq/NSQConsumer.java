@@ -13,10 +13,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class NSQConsumer {
@@ -27,8 +24,7 @@ public class NSQConsumer {
     private final NSQMessageCallback callback;
     private final NSQErrorCallback errorCallback;
     private final NSQConfig config;
-    private final Timer timer = new Timer();
-    private Timer timeout = new Timer();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private volatile long nextTimeout = 0;
     private final Map<ServerAddress, Connection> connections = Maps.newHashMap();
     private final AtomicLong totalMessages = new AtomicLong(0l);
@@ -63,17 +59,14 @@ public class NSQConsumer {
             started = true;
             //connect once otherwise we might have to wait one lookupPeriod
             connect();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        connect();
-                    } catch (Throwable t) {
-                        //dangerous but do nothing for now
-                        //The connect outside of this loop will throw an exception
-                    }
+            scheduler.scheduleAtFixedRate(() -> {
+                try {
+                    connect();
+                } catch (Throwable t) {
+                    //dangerous but do nothing for now
+                    //The connect outside of this loop will throw an exception
                 }
-            }, lookupPeriod, lookupPeriod);
+            }, lookupPeriod, lookupPeriod, TimeUnit.MILLISECONDS);
         }
         return this;
     }
@@ -119,16 +112,11 @@ public class NSQConsumer {
     private void updateTimeout(final NSQMessage message, long change) {
         rdy(message, 0);
         LogManager.getLogger(this).trace("RDY 0! Halt Flow.");
-        timeout.cancel();
         Date newTimeout = calculateTimeoutDate(change);
         if (newTimeout != null) {
-            timeout = new Timer();
-            timeout.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    rdy(message, 1); // test the waters
-                }
-            }, newTimeout);
+            scheduler.schedule(() -> {
+                rdy(message, 1); // test the waters
+            }, 0, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -147,7 +135,7 @@ public class NSQConsumer {
     }
 
     public void shutdown() {
-        this.timer.cancel();
+        scheduler.shutdown();
         cleanClose();
     }
 
@@ -234,7 +222,7 @@ public class NSQConsumer {
         }
     }
 
-    public void scheduleRun(TimerTask task, int delay, int scheduleTime) {
-        timer.schedule(task, delay, scheduleTime);
+    public void scheduleRun(Runnable task, int delay, int scheduleTime) {
+        scheduler.scheduleAtFixedRate(task, delay, scheduleTime, TimeUnit.MILLISECONDS);
     }
 }
