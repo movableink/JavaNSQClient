@@ -1,9 +1,9 @@
 
-organization := "com.github.brainlag"
+organization := "com.movableink"
 
-name := "JavaNSQClient"
+name := "nsq"
 
-version := "1.0-MI"
+version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.10.5"
 
