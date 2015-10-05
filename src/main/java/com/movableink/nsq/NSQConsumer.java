@@ -235,6 +235,6 @@ public class NSQConsumer {
     }
 
     public void scheduleRun(TimerTask task, int delay, int scheduleTime) {
-        timeout.schedule(task, delay, scheduleTime);
+        timer.schedule(task, delay, scheduleTime);
     }
 }
